@@ -32,6 +32,8 @@ B0_DEFAULTS = ["3T", "9.4T", "Custom"]
 # Gyromagnetic ratio / 2PI
 GYROM_RATIO_BAR = 42.5774806e6
 
+from ._version import __version__
+
 class Pool:
     def __init__(self, name, enabled, vals=None, userdef=False):
         self.name = name
@@ -125,7 +127,7 @@ class CESTWidget(QpWidget):
             vbox.addWidget(QtGui.QLabel("Fabber core library not found.\n\n You must install Fabber to use this widget"))
             return
     
-        title = TitleWidget(self, help="cest", subtitle="Modelling for Chemical Exchange Saturation Transfer MRI")
+        title = TitleWidget(self, help="cest", subtitle="Modelling for Chemical Exchange Saturation Transfer MRI %s" % __version__)
         vbox.addWidget(title)
         
         cite = Citation(CEST_CITE_TITLE, CEST_CITE_AUTHOR, CEST_CITE_JOURNAL)
