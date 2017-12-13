@@ -7,9 +7,11 @@ Copyright (c) 2016-2017 University of Oxford, Martin Craig
 import os
 import sys
 
-from .widget import CESTWidget, get_model_lib
+from quantiphyse.utils import get_local_shlib
+
+from .widget import CESTWidget
 
 QP_MANIFEST = {
     "widgets" : [CESTWidget],
-    "fabber-libs" : [get_model_lib("cest")]
+    "fabber-libs" : [get_local_shlib("fabber_models_cest", __file__)]
 }

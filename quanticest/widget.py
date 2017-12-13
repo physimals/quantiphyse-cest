@@ -34,16 +34,6 @@ GYROM_RATIO_BAR = 42.5774806e6
 
 from ._version import __version__
 
-def get_model_lib(name="cest"):
-    plugindir = os.path.abspath(os.path.dirname(__file__))
-    if sys.platform.startswith("win"):
-        template = "%s.dll"
-    elif sys.platform.startswith("darwin"):
-        template = "lib%s.dylib"
-    else:
-        template = "lib%s.so"
-    return os.path.join(plugindir, template % "fabber_models_%s" % name)
-
 class Pool:
     def __init__(self, name, enabled, vals=None, userdef=False):
         self.name = name
@@ -364,7 +354,7 @@ class CESTWidget(QpWidget):
     def get_rundata(self):
         # General defaults which never change
         rundata = {}
-        rundata["loadmodels"] = get_model_lib()
+        rundata["model-group"] = "cest"
         rundata["save-mean"] = ""
         rundata["save-model-fit"] = ""
         rundata["noise"] = "white"
