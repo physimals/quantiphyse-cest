@@ -112,7 +112,7 @@ class CESTWidget(QpWidget):
     ]
 
     def __init__(self, **kwargs):
-        QpWidget.__init__(self, name="CEST", icon="cest", group="Fabber", desc="CEST analysis", **kwargs)
+        QpWidget.__init__(self, name="QuantiCEST", icon="cest", group="CEST", desc="Bayesian CEST analysis", **kwargs)
         
     def init_ui(self):
         vbox = QtGui.QVBoxLayout()
@@ -127,7 +127,7 @@ class CESTWidget(QpWidget):
             vbox.addWidget(QtGui.QLabel("Fabber core library not found.\n\n You must install Fabber to use this widget"))
             return
     
-        title = TitleWidget(self, help="cest", subtitle="Modelling for Chemical Exchange Saturation Transfer MRI %s" % __version__)
+        title = TitleWidget(self, help="cest", subtitle="Bayesian Modelling for Chemical Exchange Saturation Transfer MRI %s" % __version__)
         vbox.addWidget(title)
         
         cite = Citation(CEST_CITE_TITLE, CEST_CITE_AUTHOR, CEST_CITE_JOURNAL)
