@@ -17,7 +17,7 @@ import numpy as np
 import pyqtgraph as pg
 from PySide import QtCore, QtGui
 
-from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, NumericOption, NumberGrid, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
+from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, NumericOption, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
 from quantiphyse.gui.dialogs import TextViewerDialog, error_dialog, GridEditDialog
 from quantiphyse.analysis import Process
 from quantiphyse.utils import debug, warn, get_plugins
