@@ -8,7 +8,7 @@ def update_version(name, rootdir):
     # Full version includes the Git commit hash
     full_version = subprocess.check_output('git describe --dirty', shell=True).strip(" \n")
     vfile = open(os.path.join(rootdir, name, "_version.py"), "w")
-    vfile.write("__version__='%s'" % full_version)
+    vfile.write("__version__ = '%s'\n" % full_version)
     vfile.close()
 
     # Standardized version in form major.minor.patch-build
