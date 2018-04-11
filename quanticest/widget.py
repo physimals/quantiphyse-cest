@@ -480,7 +480,7 @@ class CESTWidget(QpWidget):
 
         # Rename outputs using pool names rather than letters a, b, c etc
         renames = {"mean_M0a" : "mean_M0_Water", "mean_T1a" : "mean_T1_Water", "mean_T2a" : "mean_T2_Water"}
-        for idx, pool in enumerate(self.pools[1:]):
+        for idx, pool in enumerate([p for p in self.pools[1:] if p.enabled]):
             pool_id = chr(ord('b') + idx)
             name = self.ivm.suggest_name(pool.name)
             renames["mean_M0%s_r" % pool_id] = "mean_M0_%s_r" % name
