@@ -103,12 +103,30 @@ class CESTWidget(QpWidget):
     """
 
     pools = [
-        Pool("Water", True,  { "3T" : [0,0,1.3,0.05], "9.4T" : [0,0,1.8,0.05]}),
-        Pool("Amide", True,  { "3T" : [3.5,20,0.77,0.01], "9.4T" : [3.5,30,1.8,0.001]}),
-        Pool("NOE/MT", True, { "3T" : [-2.34,40,1.0,0.0004],  "9.4T" : [-2.41,20,1.8,0.0005]}),
-        Pool("NOE", False, { "3T" : [0,0,0,0], "9.4T" : [0,0,0,0]}),
-        Pool("MT", False, { "3T" : [0,0,0,0], "9.4T" : [0,0,0,0]}),
-        Pool("Amine", False, { "3T" : [0,0,0,0], "9.4T" : [0,0,0,0]}),
+        Pool("Water", True,  {
+            "3T"   : [+0.00, 00, 1.30, 0.07],
+            "9.4T" : [+0.00, 00, 1.80, 0.05]}
+        ),
+        Pool("Amide", True,  {
+            "3T"   : [+3.50, 20, 0.77, 0.01],
+            "9.4T" : [+3.50, 20, 1.80, 0.001]}
+        ),
+        Pool("NOE/MT", True, {
+            "3T"   : [-2.41, 30, 1.00, 0.0002],  
+            "9.4T" : [-2.41, 30, 1.50, 0.0002]}
+        ),
+        Pool("NOE", False, {
+            "3T"   : [-3.50, 20, 0.77, 0.0003],
+            "9.4T" : [-3.50, 20, 1.10, 0.0003]}
+        ),
+        Pool("MT", False, {
+            "3T"   : [+0.00, 60, 1.00, 0.0001], 
+            "9.4T" : [+0.00, 60, 1.50, 0.0001]}
+        ),
+        Pool("Amine", False, {
+            "3T"   : [+2.80, 500, 1.23, 0.00025], 
+            "9.4T" : [+2.80, 500, 1.80, 0.00025]}
+        ),
     ]
 
     def __init__(self, **kwargs):
@@ -293,6 +311,10 @@ class CESTWidget(QpWidget):
             if existing is not None:
                 existing.widget().setParent(None)
             cb = QtGui.QCheckBox(pool.name)
+            # Hacky workaround to enable us to stop the NOT/MT pool being selected at the 
+            # same time as the individual NOE or MT pools
+            if pool.name == "NOT/MT":
+                self.noe_mt_cb = cb
             cb.setChecked(pool.enabled)
             cb.stateChanged.connect(self.pool_enabled(pool))
             self.poolgrid.addWidget(cb, row, col)
@@ -301,6 +323,11 @@ class CESTWidget(QpWidget):
     def pool_enabled(self, pool):
         def cb(state):
             pool.enabled = state
+            enabled = [pool.name for pool in self.pools if pool.enabled]
+            if "NOE/MT" in enabled and ("NOE" in enabled or "MT" in enabled):
+                error_dialog("Invalid pool selection", 
+                             "You cannot select the combined NOE/MT pool at the same time as the individual NOE or MT pools")
+                self.noe_mt_cb.setChecked(False)
         return cb
 
     def b0_changed(self):
