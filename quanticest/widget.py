@@ -323,7 +323,7 @@ class CESTWidget(QpWidget):
     def pool_enabled(self, pool):
         def cb(state):
             pool.enabled = state
-            enabled = [pool.name for pool in self.pools if pool.enabled]
+            enabled = [p.name for p in self.pools if p.enabled]
             if "NOE/MT" in enabled and ("NOE" in enabled or "MT" in enabled):
                 error_dialog("Invalid pool selection", 
                              "You cannot select the combined NOE/MT pool at the same time as the individual NOE or MT pools")
