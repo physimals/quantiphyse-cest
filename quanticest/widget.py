@@ -311,24 +311,24 @@ class CESTWidget(QpWidget):
             if existing is not None:
                 existing.widget().setParent(None)
             cb = QtGui.QCheckBox(pool.name)
-            # Hacky workaround to enable us to stop the NOT/MT pool being selected at the 
-            # same time as the individual NOE or MT pools
-            if pool.name == "NOT/MT":
-                self.noe_mt_cb = cb
             cb.setChecked(pool.enabled)
-            cb.stateChanged.connect(self.pool_enabled(pool))
+            cb.clicked.connect(self.pool_enabled(pool, cb))
             self.poolgrid.addWidget(cb, row, col)
             col += 1
 
-    def pool_enabled(self, pool):
-        def cb(state):
+    def pool_enabled(self, pool, cb):
+        def _clicked():
+            state = cb.checkState()
             pool.enabled = state
+            
+            # Hacky workaround to prevent selection of individual and combined NOE/MT pools
             enabled = [p.name for p in self.pools if p.enabled]
             if "NOE/MT" in enabled and ("NOE" in enabled or "MT" in enabled):
-                error_dialog("Invalid pool selection", 
-                             "You cannot select the combined NOE/MT pool at the same time as the individual NOE or MT pools")
-                self.noe_mt_cb.setChecked(False)
-        return cb
+                error_dialog("You cannot select the combined NOE/MT pool at the same time as the individual NOE or MT pools", 
+                             title="Invalid pool selection")
+                cb.setChecked(False)
+                pool.enabled = False
+        return _clicked
 
     def b0_changed(self):
         self.b0_sel = self.b0_combo.currentText()
