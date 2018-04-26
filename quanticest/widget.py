@@ -280,9 +280,26 @@ class CESTWidget(QpWidget):
         grid.addWidget(self.t2_ovl, 3, 1)
         anVbox.addLayout(grid)
 
+        # Output Options
+        output_box = QtGui.QGroupBox()
+        output_box.setTitle("Output")
+        grid = QtGui.QGridLayout()
+        output_box.setLayout(grid)
+
+        self.output_rstar = QtGui.QCheckBox("CEST R*")
+        self.output_rstar.setChecked(True)
+        grid.addWidget(self.output_rstar, 0, 0)
+        self.output_params = QtGui.QCheckBox("Parameter maps")
+        grid.addWidget(self.output_params, 1, 0)
+        #self.output_vars = QtGui.QCheckBox("Parameter variance")
+        #grid.addWidget(self.output_vars, 2, 0)
+        self.output_modelfit = QtGui.QCheckBox("Model fit")
+        grid.addWidget(self.output_modelfit, 2, 0)
+
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(poolBox)
         hbox.addWidget(anBox)
+        hbox.addWidget(output_box)
         hbox.addStretch(1)
         vbox.addLayout(hbox)
 
@@ -382,12 +399,16 @@ class CESTWidget(QpWidget):
         # General defaults which never change
         rundata = {}
         rundata["model-group"] = "cest"
-        rundata["save-mean"] = ""
-        rundata["save-model-fit"] = ""
         rundata["noise"] = "white"
         rundata["max-iterations"] = "20"
         rundata["model"] = "cest"
-        rundata["save-model-extras"] = ""
+
+        if self.output_rstar.isChecked():
+            rundata["save-model-extras"] = ""
+        if self.output_params.isChecked():
+            rundata["save-mean"] = ""
+        if self.output_modelfit.isChecked():
+            rundata["save-model-fit"] = ""
 
         # Placeholders to be replaced with temp files
         rundata["pools"] = "pools.mat"
