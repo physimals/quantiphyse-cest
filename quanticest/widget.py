@@ -19,9 +19,8 @@ from PySide import QtCore, QtGui
 
 from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, NumericOption, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
 from quantiphyse.gui.dialogs import TextViewerDialog, error_dialog, GridEditDialog
-from quantiphyse.analysis import Process
-from quantiphyse.utils import debug, warn, get_plugins
-from quantiphyse.utils.exceptions import QpException
+from quantiphyse.processes import Process
+from quantiphyse.utils import debug, warn, get_plugins, QpException
 
 CEST_CITE_TITLE = "Quantitative Bayesian model-based analysis of amide proton transfer MRI"
 CEST_CITE_AUTHOR = "Chappell, M. A., Donahue, M. J., Tee, Y. K., Khrapitchev, A. A., Sibson, N. R., Jezzard, P., & Payne, S. J."
@@ -40,7 +39,7 @@ class Pool:
         self.enabled = enabled
         if vals is None: vals = {}
         for b0 in B0_DEFAULTS:
-            if b0 not in vals: vals[b0] = [0,0,0,0]
+            if b0 not in vals: vals[b0] = [0, 0, 0, 0]
         self.original_vals = vals
         self.userdef = userdef
         self.reset()
@@ -64,7 +63,7 @@ class NewPoolDialog(QtGui.QDialog):
         
         self.ppm = NumericOption("PPM", grid, ypos=1, xpos=0, default=0, spin=False)
         self.ppm.sig_changed.connect(self._validate)
-        self.exc = NumericOption("Exchange rate", grid, ypos=2, xpos=0, default=0,spin=False)
+        self.exc = NumericOption("Exchange rate", grid, ypos=2, xpos=0, default=0, spin=False)
         self.exc.sig_changed.connect(self._validate)
         self.t1 = NumericOption("T1", grid, ypos=1, xpos=2, default=1.0, spin=False)
         self.t1.sig_changed.connect(self._validate)
@@ -73,10 +72,10 @@ class NewPoolDialog(QtGui.QDialog):
 
         vbox.addLayout(grid)
 
-        self.buttonBox = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        vbox.addWidget(self.buttonBox)
+        self.button_box = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        vbox.addWidget(self.button_box)
 
         self.setLayout(vbox)
         self._validate()
@@ -95,7 +94,7 @@ class NewPoolDialog(QtGui.QDialog):
             self.name_edit.setStyleSheet("QLineEdit {background-color: red}")
             valid = False
         
-        self.buttonBox.button(QtGui.QDialogButtonBox.Ok).setEnabled(valid)
+        self.button_box.button(QtGui.QDialogButtonBox.Ok).setEnabled(valid)
 
 class CESTWidget(QpWidget):
     """
@@ -137,11 +136,11 @@ class CESTWidget(QpWidget):
         self.setLayout(vbox)
 
         try:
-            self.FabberProcess = get_plugins("processes", "FabberProcess")[0]
+            self.fabber_process = get_plugins("processes", "FabberProcess")[0]
         except:
-            self.FabberProcess = None
+            self.fabber_process = None
 
-        if self.FabberProcess is None:
+        if self.fabber_process is None:
             vbox.addWidget(QtGui.QLabel("Fabber core library not found.\n\n You must install Fabber to use this widget"))
             return
     
@@ -151,11 +150,11 @@ class CESTWidget(QpWidget):
         cite = Citation(CEST_CITE_TITLE, CEST_CITE_AUTHOR, CEST_CITE_JOURNAL)
         vbox.addWidget(cite)
 
-        seqBox = QtGui.QGroupBox()
-        seqBox.setTitle("Sequence")
+        seq_box = QtGui.QGroupBox()
+        seq_box.setTitle("Sequence")
         grid = QtGui.QGridLayout()
         grid.setColumnStretch(2, 1)
-        seqBox.setLayout(grid)
+        seq_box.setLayout(grid)
 
         # Table of frequency offsets
         grid.addWidget(QtGui.QLabel("Frequency offsets"), 0, 0)
@@ -227,17 +226,17 @@ class CESTWidget(QpWidget):
         grid.addWidget(self.load_pds, 6, 3)
         self.pr = NumericOption("Pulse Repeats", grid, ypos=7, xpos=0, default=1, intonly=True)
         
-        vbox.addWidget(seqBox)
+        vbox.addWidget(seq_box)
     
         # Pools
-        poolBox = QtGui.QGroupBox()
-        poolBox.setTitle("Pools")
-        poolVbox = QtGui.QVBoxLayout()
-        poolBox.setLayout(poolVbox)
+        pool_box = QtGui.QGroupBox()
+        pool_box.setTitle("Pools")
+        pool_vbox = QtGui.QVBoxLayout()
+        pool_box.setLayout(pool_vbox)
 
         self.poolgrid = QtGui.QGridLayout()
         self.populate_poolgrid()
-        poolVbox.addLayout(self.poolgrid)
+        pool_vbox.addLayout(self.poolgrid)
 
         hbox = QtGui.QHBoxLayout()
         self.custom_label = QtGui.QLabel("")
@@ -252,13 +251,13 @@ class CESTWidget(QpWidget):
         reset_btn = QtGui.QPushButton("Reset")
         reset_btn.clicked.connect(self.reset_pools)
         hbox.addWidget(reset_btn)
-        poolVbox.addLayout(hbox)
+        pool_vbox.addLayout(hbox)
 
         # Fabber Options
-        anBox = QtGui.QGroupBox()
-        anBox.setTitle("Analysis")
+        analysis_box = QtGui.QGroupBox()
+        analysis_box.setTitle("Analysis")
         anVbox = QtGui.QVBoxLayout()
-        anBox.setLayout(anVbox)
+        analysis_box.setLayout(anVbox)
 
         grid = QtGui.QGridLayout()
         self.spatial_cb = QtGui.QCheckBox("Spatial regularization")
@@ -297,20 +296,18 @@ class CESTWidget(QpWidget):
         grid.addWidget(self.output_modelfit, 2, 0)
 
         hbox = QtGui.QHBoxLayout()
-        hbox.addWidget(poolBox)
-        hbox.addWidget(anBox)
+        hbox.addWidget(pool_box)
+        hbox.addWidget(analysis_box)
         hbox.addWidget(output_box)
         hbox.addStretch(1)
         vbox.addLayout(hbox)
 
-        # Run box
-        runBox = RunBox(self.get_process_model, self.get_rundata_model, title="Run model-based analysis", save_option=True)
-        vbox.addWidget(runBox)
-        vbox.addStretch(1)
+        run_box = RunBox(self.get_process_model, self.get_rundata_model, title="Run model-based analysis", save_option=True)
+        vbox.addWidget(run_box)
         
-        # Run box
-        runBox = RunBox(self.get_process_lda, self.get_rundata_lda, title="Run Lorentzian Difference analysis", save_option=True)
-        vbox.addWidget(runBox)
+        run_box = RunBox(self.get_process_lda, self.get_rundata_lda, title="Run Lorentzian Difference analysis", save_option=True)
+        vbox.addWidget(run_box)
+
         vbox.addStretch(1)
 
         self.poolvals_edited = False
@@ -364,7 +361,7 @@ class CESTWidget(QpWidget):
         
         Options should be handled much more cleanly than this!
         """
-        freqs  = self.freq_offsets.values()
+        freqs = self.freq_offsets.values()
         if self.ivm.main.ndim == 4 and len(freqs) == self.ivm.main.nvols:
             self.opts.t_combo.setCurrentIndex(1)
             self.opts.t_scale = self.freq_offsets.values()
@@ -519,7 +516,7 @@ class CESTWidget(QpWidget):
         return "Fabber", self.get_rundata(), support_files
 
     def get_process_model(self):
-        process = self.FabberProcess(self.ivm)
+        process = self.fabber_process(self.ivm)
         process.sig_finished.connect(self.postproc)
         return process
 
@@ -548,7 +545,7 @@ class CESTWidget(QpWidget):
             debug("%s: %s" % item)
         return rundata
 
-    def postproc(self, status, results, log, exception):
+    def postproc(self, status, log, exception):
          # Remove temp files after run completes
         for fname in self.tempfiles:
             try:
@@ -562,16 +559,16 @@ class CESTWidget(QpWidget):
         #if status == Process.SUCCEEDED:
         #    self.update_volumes_axis()    
 
-    def postproc_lda(self, status, results, log, exception):
+    def postproc_lda(self, status, log, exception):
         # Rename residuals and change sign convention
-        resids = self.ivm.data["residuals"]
-        ld = -resids.std()
+        residuals = self.ivm.data["residuals"]
+        lorenz_diff = -residuals.raw()
+        self.ivm.add_data(lorenz_diff, name="lorenz_diff", grid=residuals.grid, make_current=True)
         self.ivm.delete_data("residuals")
-        self.ivm.add_data(ld, name="lorenz_diff", make_current=True)
 
     def get_process_lda(self):
         # FIXME need special process to get the residuals only
-        process = self.FabberProcess(self.ivm)
+        process = self.fabber_process(self.ivm)
         process.sig_finished.connect(self.postproc)
         process.sig_finished.connect(self.postproc_lda)
         return process
@@ -612,7 +609,6 @@ class CESTWidget(QpWidget):
         self.tempfiles = [rundata[s] for s in ("pools", "ptrain", "spec")]
 
         # Return pools to previous state
-        current_pools = []
         for idx, p in enumerate(self.pools):
             p.enabled = (p.name in enabled_pools)
 
