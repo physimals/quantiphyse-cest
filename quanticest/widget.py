@@ -439,13 +439,13 @@ class CESTWidget(QpWidget):
                 repeats = 1
             b1 = self.b1.spin.value()/1e6
             #if self.unsat_cb.isChecked():
-            #    debug("Unsat", idx, self.unsat_combo.currentIndex())
+            #    self.debug("Unsat", idx, self.unsat_combo.currentIndex())
             #    if idx == 0 and self.unsat_combo.currentIndex() in (0, 2):
             #        b1 = 0
             #    elif idx == len(freqs)-1 and self.unsat_combo.currentIndex() in (1, 2):
             #        b1 = 0
             dataspec += "%g %g %i\n" % (freq, b1, repeats)
-        debug(dataspec)
+        self.debug(dataspec)
         return dataspec
 
     def get_ptrain(self):
@@ -461,7 +461,7 @@ class CESTWidget(QpWidget):
                 ptrain += "%g %g\n" % (pm, pd)
         else:
             ptrain += "1 %g\n" % self.st.spin.value()
-        debug(ptrain)
+        self.debug(ptrain)
         return ptrain
 
     def get_poolmat(self):
@@ -473,7 +473,7 @@ class CESTWidget(QpWidget):
                 vals = [self.b0 * GYROM_RATIO_BAR,] +vals[1:]
             if pool.enabled:
                 poolmat += "\t".join([str(v) for v in vals]) + "\n"
-        debug(poolmat)
+        self.debug(poolmat)
         return poolmat
 
     def write_temp(self, name, data):
@@ -515,7 +515,7 @@ class CESTWidget(QpWidget):
 
         self.tempfiles = [rundata[s] for s in ("pools", "ptrain", "spec")]
         for item in rundata.items():
-            debug("%s: %s" % item)
+            self.debug("%s: %s" % item)
         return rundata
 
     def postproc(self, status, log, exception):
@@ -586,5 +586,5 @@ class CESTWidget(QpWidget):
             p.enabled = (p.name in enabled_pools)
 
         for k in sorted(rundata.keys()):
-            debug("%s: %s" % (k, rundata[k]))
+            self.debug("%s: %s" % (k, rundata[k]))
         return rundata
