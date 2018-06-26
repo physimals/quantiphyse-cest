@@ -524,7 +524,7 @@ class CESTWidget(QpWidget):
             try:
                 os.remove(fname)
             except:
-                warn("Failed to delete temp file: %s" % fname)
+                self.warn("Failed to delete temp file: %s" % fname)
 
         # Update 'volumes' axis to contain frequencies
         # FIXME removed as effectively requires frequencies to be
