@@ -20,7 +20,7 @@ from PySide import QtCore, QtGui
 from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, NumericOption, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
 from quantiphyse.gui.dialogs import TextViewerDialog, error_dialog, GridEditDialog
 from quantiphyse.processes import Process
-from quantiphyse.utils import debug, warn, get_plugins, QpException
+from quantiphyse.utils import get_plugins, QpException
 
 CEST_CITE_TITLE = "Quantitative Bayesian model-based analysis of amide proton transfer MRI"
 CEST_CITE_AUTHOR = "Chappell, M. A., Donahue, M. J., Tee, Y. K., Khrapitchev, A. A., Sibson, N. R., Jezzard, P., & Payne, S. J."
