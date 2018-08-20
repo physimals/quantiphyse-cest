@@ -12,12 +12,9 @@ import traceback
 import re
 import tempfile
 
-import nibabel as nib
-import numpy as np
-import pyqtgraph as pg
 from PySide import QtCore, QtGui
 
-from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, NumericOption, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
+from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, OverlayCombo, RoiCombo, NumericOption, NumberList, LoadNumbers, OrderList, OrderListButtons, Citation, TitleWidget, RunBox
 from quantiphyse.gui.dialogs import TextViewerDialog, error_dialog, GridEditDialog
 from quantiphyse.processes import Process
 from quantiphyse.utils import get_plugins, QpException
@@ -135,24 +132,31 @@ class CESTWidget(QpWidget):
         seq_box = QtGui.QGroupBox()
         seq_box.setTitle("Sequence")
         grid = QtGui.QGridLayout()
-        grid.setColumnStretch(2, 1)
+        grid.setColumnStretch(4, 1)
         seq_box.setLayout(grid)
 
         # Table of frequency offsets
         grid.addWidget(QtGui.QLabel("Frequency offsets"), 0, 0)
         self.freq_offsets = NumberList([1, 2, 3, 4, 5])
-        grid.addWidget(self.freq_offsets, 0, 1, 1, 2)
+        grid.addWidget(self.freq_offsets, 0, 1, 1, 4)
         self.load_freq_offsets = LoadNumbers(self.freq_offsets)
-        grid.addWidget(self.load_freq_offsets, 0, 3)
+        grid.addWidget(self.load_freq_offsets, 0, 5)
 
+        self.data_combo = OverlayCombo(self.ivm)
+        grid.addWidget(QtGui.QLabel("CEST data"), 1, 0)
+        grid.addWidget(self.data_combo, 1, 1)
+        self.roi_combo = RoiCombo(self.ivm)
+        grid.addWidget(QtGui.QLabel("ROI"), 1, 2)
+        grid.addWidget(self.roi_combo, 1, 3)
+        
         # Field strength - this affects pool values selected
-        grid.addWidget(QtGui.QLabel("B0"), 1, 0)
+        grid.addWidget(QtGui.QLabel("B0"), 2, 0)
         self.b0_combo = QtGui.QComboBox()
         self.poolval_combo = QtGui.QComboBox()
         for b0 in B0_DEFAULTS:
             self.b0_combo.addItem(b0)
         self.b0_combo.currentIndexChanged.connect(self.b0_changed)
-        grid.addWidget(self.b0_combo, 1, 1)
+        grid.addWidget(self.b0_combo, 2, 1)
 
         self.b0_custom = QtGui.QWidget()
         hbox = QtGui.QHBoxLayout()
@@ -162,15 +166,14 @@ class CESTWidget(QpWidget):
         self.b0_spin.valueChanged.connect(self.b0_changed)
         hbox.addWidget(self.b0_spin)
         hbox.addWidget(QtGui.QLabel("T"))
-        hbox.addStretch(1)
         label = QtGui.QLabel("WARNING: Pool values will need editing")
         label.setStyleSheet("QLabel { color : red; }")
         hbox.addWidget(label)
-        grid.addWidget(self.b0_custom, 1, 2)
+        grid.addWidget(self.b0_custom, 2, 2, 1, 4)
 
         # B1 field
-        self.b1 = NumericOption("B1 (\u03bcT)", grid, ypos=2, xpos=0, default=0.55, decimals=6)
-        hbox = QtGui.QHBoxLayout()
+        self.b1 = NumericOption("B1 (\u03bcT)", grid, ypos=3, xpos=0, default=0.55, decimals=6)
+        #hbox = QtGui.QHBoxLayout()
         #self.unsat_cb = QtGui.QCheckBox("Unsaturated")
         #self.unsat_cb.stateChanged.connect(self.update_ui)
         #hbox.addWidget(self.unsat_cb)
@@ -179,16 +182,16 @@ class CESTWidget(QpWidget):
         #self.unsat_combo.addItem("last")
         #self.unsat_combo.addItem("first and last  ")
         #hbox.addWidget(self.unsat_combo)
-        hbox.addStretch(1)
-        grid.addLayout(hbox, 2, 2)
+        #hbox.addStretch(1)
+        #grid.addLayout(hbox, 2, 2)
         
-        grid.addWidget(QtGui.QLabel("Saturation"), 3, 0)
+        grid.addWidget(QtGui.QLabel("Saturation"), 3, 2)
         self.sat_combo = QtGui.QComboBox()
         self.sat_combo.addItem("Continuous Saturation   ")
         self.sat_combo.addItem("Pulsed Saturation   ")
         self.sat_combo.currentIndexChanged.connect(self.update_ui)
         self.sat_combo.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContents)
-        grid.addWidget(self.sat_combo, 3, 1)
+        grid.addWidget(self.sat_combo, 3, 3)
 
         # Continuous saturation
         self.st = NumericOption("Saturation times (s)", grid, ypos=4, xpos=0, default=2.0)
@@ -261,6 +264,13 @@ class CESTWidget(QpWidget):
         grid.addWidget(self.t2_ovl, 3, 1)
         anVbox.addLayout(grid)
 
+        self.pvc_cb = QtGui.QCheckBox("Tissue PV map (GM+WM)")
+        self.pvc_cb.stateChanged.connect(self.update_ui)
+        grid.addWidget(self.pvc_cb, 4, 0)
+        self.pv_ovl = OverlayCombo(self.ivm, static_only=True)
+        self.pv_ovl.setEnabled(False)
+        grid.addWidget(self.pv_ovl, 4, 1)
+        
         # Output Options
         output_box = QtGui.QGroupBox()
         output_box.setTitle("Output")
@@ -368,6 +378,8 @@ class CESTWidget(QpWidget):
     def get_rundata(self):
         # General defaults which never change
         rundata = {}
+        rundata["data"] = self.data_combo.currentText()
+        rundata["roi"] = self.roi_combo.currentText()
         rundata["model-group"] = "cest"
         rundata["noise"] = "white"
         rundata["max-iterations"] = "20"
@@ -408,6 +420,10 @@ class CESTWidget(QpWidget):
                 prior_num += 1
         else:
             rundata.pop("t12prior", None)
+
+        if self.pvc_cb.isChecked():
+            rundata["pvcimg"] = self.pv_ovl.currentText()
+
         return rundata
 
     def update_ui(self):
@@ -427,6 +443,7 @@ class CESTWidget(QpWidget):
         self.t2_cb.setEnabled(self.t12_cb.isChecked())
         self.t1_ovl.setEnabled(self.t12_cb.isChecked() and self.t1_cb.isChecked())
         self.t2_ovl.setEnabled(self.t12_cb.isChecked() and self.t2_cb.isChecked())
+        self.pv_ovl.setEnabled(self.pvc_cb.isChecked())
         #self.unsat_combo.setEnabled(self.unsat_cb.isChecked())
 
     def get_dataspec(self):
