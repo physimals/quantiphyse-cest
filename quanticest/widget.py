@@ -237,6 +237,7 @@ class CESTWidget(QpWidget):
         reset_btn.clicked.connect(self.reset_pools)
         hbox.addWidget(reset_btn)
         pool_vbox.addLayout(hbox)
+        pool_vbox.addStretch(1)
 
         # Fabber Options
         analysis_box = QtGui.QGroupBox()
@@ -286,6 +287,7 @@ class CESTWidget(QpWidget):
         #grid.addWidget(self.output_vars, 2, 0)
         self.output_modelfit = QtGui.QCheckBox("Model fit")
         grid.addWidget(self.output_modelfit, 2, 0)
+        grid.setRowStretch(3, 1)
 
         hbox = QtGui.QHBoxLayout()
         hbox.addWidget(pool_box)
@@ -294,11 +296,15 @@ class CESTWidget(QpWidget):
         hbox.addStretch(1)
         vbox.addLayout(hbox)
 
+        run_tabs = QtGui.QTabWidget()
+        
         run_box = RunBox(self.get_process_model, self.get_rundata_model, title="Run model-based analysis", save_option=True)
-        vbox.addWidget(run_box)
+        run_tabs.addTab(run_box, "Model based analysis")
         
         run_box = RunBox(self.get_process_lda, self.get_rundata_lda, title="Run Lorentzian Difference analysis", save_option=True)
-        vbox.addWidget(run_box)
+        run_tabs.addTab(run_box, "Lorentzian Difference analysis")
+        
+        vbox.addWidget(run_tabs)
 
         vbox.addStretch(1)
 
@@ -422,7 +428,7 @@ class CESTWidget(QpWidget):
             rundata.pop("t12prior", None)
 
         if self.pvc_cb.isChecked():
-            rundata["pvcimg"] = self.pv_ovl.currentText()
+            rundata["pvimg"] = self.pv_ovl.currentText()
 
         return rundata
 
