@@ -99,12 +99,12 @@ class CESTWidget(QpWidget):
     """
 
     pools = [
-        Pool("Water", True, {"3T" : [0, 0, 1.3, 0.05], "9.4T" : [0, 0, 1.8, 0.05]}),
-        Pool("Amide", True, {"3T" : [3.5, 20, 0.77, 0.01], "9.4T" : [3.5, 30, 1.8, 0.001]}),
-        Pool("NOE/MT", True, {"3T" : [-2.34, 40, 1.0, 0.0004], "9.4T" : [-2.41, 20, 1.8, 0.0005]}),
-        Pool("NOE", False, {"3T" : [0, 0, 0, 0], "9.4T" : [0, 0, 0, 0]}),
+        Pool("Water", True, {"3T" : [0, 0, 1.3, 0.07], "9.4T" : [0, 0, 1.9, 0.07]}),
+        Pool("Amide", True, {"3T" : [3.5, 20, 0.77, 0.01], "9.4T" : [3.5, 20, 1.1, 0.01]}),
+        Pool("NOE/MT", True, {"3T" : [-2.41, 30, 1.0, 0.0002], "9.4T" : [-2.41, 30, 1.5, 0.0002]}),
+        Pool("NOE", False, {"3T" : [-3.5, 20, 0.77, 0.0003], "9.4T" : [-3.5, 20, 1.1, 0.0003]}),
         Pool("MT", False, {"3T" : [0, 60, 1.0, 0.0001], "9.4T" : [0, 60, 1.5, 0.0001]}),
-        Pool("Amine", False, {"3T" : [0, 0, 0, 0], "9.4T" : [0, 0, 0, 0]}),
+        Pool("Amine", False, {"3T" : [2.8, 500, 1.23, 0.00025], "9.4T" : [2.8, 500, 1.8, 0.00025]}),
     ]
 
     def __init__(self, **kwargs):
@@ -559,8 +559,8 @@ class CESTWidget(QpWidget):
         # Rename residuals and change sign convention
         residuals = self.ivm.data["residuals"]
         lorenz_diff = -residuals.raw()
-        self.ivm.add_data(lorenz_diff, name="lorenz_diff", grid=residuals.grid, make_current=True)
-        self.ivm.delete_data("residuals")
+        self.ivm.add(lorenz_diff, name="lorenz_diff", grid=residuals.grid, make_current=True)
+        self.ivm.delete("residuals")
 
     def get_process_lda(self):
         # FIXME need special process to get the residuals only
