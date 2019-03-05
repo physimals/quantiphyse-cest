@@ -501,7 +501,7 @@ class CESTWidget(QpWidget):
 
     def write_temp(self, name, data):
         f = tempfile.NamedTemporaryFile(prefix=name, delete=False)
-        f.write(data) 
+        f.write(data.encode('utf-8')) 
         f.close()
         return f.name
 

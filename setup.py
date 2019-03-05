@@ -83,7 +83,7 @@ def get_package_data(rootdir):
 module_dir = os.path.abspath(os.path.dirname(__file__))
 
 kwargs = {
-    'name' : 'quanticest',
+    'name' : 'quantiphyse-cest',
     'version' : get_version(module_dir),
     'description' : 'Quantiphyse plugin for CEST-MRI data',
     'long_description' : get_filetext(module_dir, 'README.md'),
