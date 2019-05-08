@@ -533,8 +533,7 @@ class CESTWidget(QpWidget):
             renames["mean_T1_%s" % pool_id] = "mean_T1_%s" % name
             renames["mean_T2_%s" % pool_id] = "mean_T2_%s" % name
             renames["cest_rstar_%s" % pool_id] = "cest_rstar_%s" % name
-        rundata["output-rename"] = renames 
-        #rundata["debug"] = ""
+        rundata["output-rename"] = renames
 
         self.tempfiles = [rundata[s] for s in ("pools", "ptrain", "spec")]
         for item in rundata.items():
@@ -573,7 +572,6 @@ class CESTWidget(QpWidget):
         rundata = self.get_rundata()
         rundata["ptrain"] = self.write_temp("ptrain", self.get_ptrain())
         rundata["spec"] = self.write_temp("dataspec", self.get_dataspec())
-        #rundata["debug"] = ""
         
         # LDA is the residual data (data - modelfit)
         rundata.pop("save-mean", None)
