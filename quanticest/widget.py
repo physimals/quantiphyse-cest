@@ -370,6 +370,7 @@ class AnalysisOptions(QtGui.QWidget):
         self.optbox.add("Parameter maps", BoolOption(default=False), key="save-mean")
         #self.optbox.add("Parameter variance", BoolOption(default=False), key="var")
         self.optbox.add("Model fit", BoolOption(default=False), key="save-model-fit")
+        self.optbox.add("Prefix for output", TextOption(), checked=True, key="output-prefix")
 
         self.optbox.add(" ")
         self.optbox.add("<b>Model options</b>")
@@ -377,6 +378,9 @@ class AnalysisOptions(QtGui.QWidget):
         self.optbox.option("new-ss").sig_changed.connect(self._update_ui)
         self.optbox.add("TR (s)", NumericOption(default=1.0, minval=0, maxval=5, digits=3, step=0.1), key="tr")
         self.optbox.add("Excitation flip angle (\N{DEGREE SIGN})", NumericOption(default=12.0, minval=0, maxval=25, digits=3, step=1.0), key="fa")
+        self.optbox.add("Line shape", ChoiceOption(["None", "Gaussian", "Lorentzian", "Super Lorentzian"], 
+                                                   ["none", "gaussian", "lorentzian", "superlorentzian"]),
+                         key="lineshape")
         
         self.alexmt_cite = Citation(ALEXMT_CITE_TITLE, ALEXMT_CITE_AUTHOR, ALEXMT_CITE_JOURNAL)
         vbox.addWidget(self.alexmt_cite)
@@ -391,6 +395,7 @@ class AnalysisOptions(QtGui.QWidget):
         newss = self.optbox.option("new-ss").value
         self.optbox.set_visible("tr", newss)
         self.optbox.set_visible("fa", newss)
+        self.optbox.set_visible("lineshape", newss)
         self.alexmt_cite.setVisible(newss)
 
     def options(self):
@@ -471,6 +476,16 @@ class CESTWidget(QpWidget):
 
         for idx in range(self.tabs.count()):
             options.update(self.tabs.widget(idx).options())
+
+        # Apply output prefix
+        output_prefix = options.pop("output-prefix", "")
+        if output_prefix:
+            output_renames = options["output-rename"]
+            for output in ["modelfit", "mean_ppm_off", "mean_B1corr"]:
+                output_renames[output] = output
+
+            for key in list(output_renames.keys()):
+                output_renames[key] = output_prefix + output_renames[key]
 
         return options
 
