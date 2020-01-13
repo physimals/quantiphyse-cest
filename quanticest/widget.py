@@ -29,7 +29,7 @@ CEST_CITE_JOURNAL = "Magnetic Resonance in Medicine. doi:10.1002/mrm.24474"
 
 ALEXMT_CITE_TITLE = "Does the MT Effect Bias CEST Effects? Quantifying CEST in the Presence of MT"
 ALEXMT_CITE_AUTHOR = "Alex K. Smith, Kevin J. Ray, Martin Craig, Seth A. Smith, Michael A Chappell"
-ALEXMT_CITE_JOURNAL = "ISMRM 2019"
+ALEXMT_CITE_JOURNAL = "Magnetic Resonance in Medicine 2020 (pending, accepted)"
 
 B0_DEFAULTS = ["3.0T", "9.4T", "Custom"]
 
@@ -50,7 +50,9 @@ class Pool:
         self.reset()
 
     def reset(self):
-        self.vals = dict(self.original_vals)
+        self.vals = {}
+        for b0 in B0_DEFAULTS:
+            self.vals[b0] = self.original_vals[b0].copy()
 
 class NewPoolDialog(QtGui.QDialog):
 
