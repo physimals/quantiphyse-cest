@@ -211,12 +211,14 @@ class PoolOptions(QtGui.QWidget):
     Widget which allows the set of pools included in the analysis to be changed
     """
    
+    sig_pools_changed = QtCore.Signal(object)
+
     def __init__(self, ivm=None):
         QtGui.QWidget.__init__(self)
         self._ivm = ivm
         self._poolvals_edited = False
         self._updating = False
-        self.pools = [
+        self._pools = [
             Pool("Water", True, {"3.0T" : [0, 0, 1.3, 0.07], "9.4T" : [0, 0, 1.9, 0.07]}),
             Pool("Amide", True, {"3.0T" : [3.5, 20, 0.77, 0.01], "9.4T" : [3.5, 20, 1.1, 0.01]}),
             Pool("Amine", False, {"3.0T" : [2.8, 500, 1.23, 0.00025], "9.4T" : [2.8, 500, 1.8, 0.00025]}),
@@ -248,6 +250,16 @@ class PoolOptions(QtGui.QWidget):
 
         self.set_b0(3.0)
         
+    @property
+    def pools(self):
+        # We must put the MT pool last in case we are using Alex's new 
+        # steady state solution (which assumes the last pool is MT)
+        pools = [p for p in self._pools if p.name != "MT"]
+        for p in self._pools:
+            if p.name == "MT":
+                pools.append(p)
+        return pools
+
     def _update_pool_list(self):
         self._updating = True
         try:
@@ -259,7 +271,7 @@ class PoolOptions(QtGui.QWidget):
             self.pools_table.setHorizontalHeaderItem(4, QtGui.QStandardItem("T2"))
             self.pools_table_view.horizontalHeader().setSectionResizeMode(0, QtGui.QHeaderView.Stretch)
 
-            for idx, pool in enumerate(self.pools):
+            for idx, pool in enumerate(self._pools):
                 name_item = QtGui.QStandardItem(pool.name)
                 name_item.setCheckable(True)
                 name_item.setEditable(False)
@@ -277,6 +289,7 @@ class PoolOptions(QtGui.QWidget):
             self.pools_table_view.resizeColumnsToContents()
         finally:
             self._updating = False
+        self.sig_pools_changed.emit(self.pools)
 
     def _pools_table_changed(self, item):
         if not self._updating:
@@ -290,11 +303,12 @@ class PoolOptions(QtGui.QWidget):
                     item.setBackground(QtCore.Qt.yellow)
                 except ValueError:
                     item.setBackground(QtCore.Qt.red)
+            self.sig_pools_changed.emit(self.pools)
 
     def _new_pool(self):
         dlg = NewPoolDialog(self)
         if dlg.exec_():
-            self.pools.append(dlg.pool(self._b0_str))
+            self._pools.append(dlg.pool(self._b0_str))
             self._update_pool_list()
 
     def _reset_pools(self):
@@ -313,6 +327,7 @@ class PoolOptions(QtGui.QWidget):
                 vals = [self._b0 * GYROM_RATIO_BAR,] + vals[1:]
             if pool.enabled:
                 poolmat.append(vals)
+        
         return poolmat
 
     def set_b0(self, b0):
@@ -358,15 +373,6 @@ class AnalysisOptions(QtGui.QWidget):
         self.optbox = OptionBox()
         vbox.addWidget(self.optbox)
 
-        self.optbox.add("<b>Analysis options</b>")
-        self.optbox.add("Spatial Regularization", BoolOption(), key="spatial")
-        self.optbox.add("Allow uncertainty in T1/T2 values", BoolOption(), key="t12prior")
-        self.optbox.add("Prior T1 map", DataOption(self._ivm), key="t1img", checked=True)
-        self.optbox.add("Prior T2 map", DataOption(self._ivm), key="t2img", checked=True)
-        self.optbox.add("Tissue PV map (GM+WM)", DataOption(self._ivm), key="pvimg", checked=True)
-        self.optbox.option("t12prior").sig_changed.connect(self._update_ui)
-        
-        self.optbox.add(" ")
         self.optbox.add("<b>Output options</b>")
         self.optbox.add("CEST R*", BoolOption(default=True), key="save-model-extras")
         self.optbox.add("Parameter maps", BoolOption(default=False), key="save-mean")
@@ -375,13 +381,19 @@ class AnalysisOptions(QtGui.QWidget):
         self.optbox.add("Prefix for output", TextOption(), checked=True, key="output-prefix")
 
         self.optbox.add(" ")
-        self.optbox.add("<b>Model options</b>")
-        self.optbox.add("Use new steady state solution for MT bias", BoolOption(default=False), key="new-ss")
+        self.optbox.add("<b>Analysis options</b>")
+        self.optbox.add("Spatial Regularization", BoolOption(), key="spatial")
+        self.optbox.add("Allow uncertainty in T1/T2 values", BoolOption(), key="t12prior")
+        self.optbox.add("Prior T1 map", DataOption(self._ivm), key="t1img", checked=True)
+        self.optbox.add("Prior T2 map", DataOption(self._ivm), key="t2img", checked=True)
+        self.optbox.add("Tissue PV map (GM+WM)", DataOption(self._ivm), key="pvimg", checked=True)
+        self.optbox.option("t12prior").sig_changed.connect(self._update_ui)
+        self.optbox.add("Use steady state solution for MT bias reduction", BoolOption(default=False), key="new-ss")
         self.optbox.option("new-ss").sig_changed.connect(self._update_ui)
         self.optbox.add("TR (s)", NumericOption(default=1.0, minval=0, maxval=5, digits=3, step=0.1), key="tr")
         self.optbox.add("Excitation flip angle (\N{DEGREE SIGN})", NumericOption(default=12.0, minval=0, maxval=25, digits=3, step=1.0), key="fa")
-        self.optbox.add("Line shape", ChoiceOption(["None", "Gaussian", "Lorentzian", "Super Lorentzian"], 
-                                                   ["none", "gaussian", "lorentzian", "superlorentzian"]),
+        self.optbox.add("MT pool Line shape", ChoiceOption(["None", "Gaussian", "Lorentzian", "Super Lorentzian"], 
+                                                           ["none", "gaussian", "lorentzian", "superlorentzian"]),
                          key="lineshape")
         
         self.alexmt_cite = Citation(ALEXMT_CITE_TITLE, ALEXMT_CITE_AUTHOR, ALEXMT_CITE_JOURNAL)
@@ -394,11 +406,15 @@ class AnalysisOptions(QtGui.QWidget):
         t12prior = self.optbox.option("t12prior").value
         self.optbox.set_visible("t1img", t12prior)
         self.optbox.set_visible("t2img", t12prior)
-        newss = self.optbox.option("new-ss").value
+        newss = self.optbox.values().get("new-ss", False)
         self.optbox.set_visible("tr", newss)
         self.optbox.set_visible("fa", newss)
         self.optbox.set_visible("lineshape", newss)
         self.alexmt_cite.setVisible(newss)
+
+    def set_pools(self, pools):
+        self.optbox.set_visible("new-ss", "MT" in [p.name for p in pools if p.enabled])
+        self._update_ui()
 
     def options(self):
         options = self.optbox.values()
@@ -411,7 +427,7 @@ class AnalysisOptions(QtGui.QWidget):
             options.pop("param-spatial-priors", None)
 
         # The new MT model is automatically triggered when the TR and FA options are given    
-        options.pop("new-ss")
+        options.pop("new-ss", None)
 
         prior_num = 1
         for idx in (1, 2):
@@ -452,9 +468,14 @@ class CESTWidget(QpWidget):
         self.tabs = QtGui.QTabWidget()
         self.seqtab = SequenceOptions(self.ivm)
         self.tabs.addTab(self.seqtab, "Sequence")
+
         self.pooltab = PoolOptions(self.ivm)
         self.tabs.addTab(self.pooltab, "Pools")
-        self.tabs.addTab(AnalysisOptions(self.ivm), "Analysis")
+
+        self.analysistab = AnalysisOptions(self.ivm)
+        self.tabs.addTab(self.analysistab, "Analysis")
+
+        self.pooltab.sig_pools_changed.connect(self.analysistab.set_pools)
         self.seqtab.sig_b0_changed.connect(self.pooltab.set_b0)
         vbox.addWidget(self.tabs)
 
@@ -466,6 +487,7 @@ class CESTWidget(QpWidget):
         vbox.addWidget(run_tabs)
 
         vbox.addStretch(1)
+        self.analysistab.set_pools(self.pooltab.pools)
             
     def _options(self):
         # General defaults which never change
