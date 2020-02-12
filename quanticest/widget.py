@@ -52,7 +52,7 @@ class Pool:
     def reset(self):
         self.vals = {}
         for b0 in B0_DEFAULTS:
-            self.vals[b0] = self.original_vals[b0].copy()
+            self.vals[b0] = list(self.original_vals[b0])[:]
 
 class NewPoolDialog(QtGui.QDialog):
 
@@ -390,7 +390,7 @@ class AnalysisOptions(QtGui.QWidget):
         self.optbox.option("t12prior").sig_changed.connect(self._update_ui)
         self.optbox.add("Use steady state solution for MT bias reduction", BoolOption(default=False), key="new-ss")
         self.optbox.option("new-ss").sig_changed.connect(self._update_ui)
-        self.optbox.add("TR (s)", NumericOption(default=1.0, minval=0, maxval=5, digits=3, step=0.1), key="tr")
+        self.optbox.add("TR (s)", NumericOption(default=3.0, minval=0, maxval=5, digits=3, step=0.1), key="tr")
         self.optbox.add("Excitation flip angle (\N{DEGREE SIGN})", NumericOption(default=12.0, minval=0, maxval=25, digits=3, step=1.0), key="fa")
         self.optbox.add("MT pool Line shape", ChoiceOption(["None", "Gaussian", "Lorentzian", "Super Lorentzian"], 
                                                            ["none", "gaussian", "lorentzian", "superlorentzian"]),
