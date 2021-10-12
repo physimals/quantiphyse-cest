@@ -12,10 +12,7 @@ import traceback
 import re
 import tempfile
 
-try:
-    from PySide import QtGui, QtCore, QtGui as QtWidgets
-except ImportError:
-    from PySide2 import QtGui, QtCore, QtWidgets
+from PySide2 import QtGui, QtCore, QtWidgets
 
 from quantiphyse.gui.options import OptionBox, DataOption, NumericOption, BoolOption, NumberListOption, TextOption, ChoiceOption
 from quantiphyse.gui.widgets import QpWidget, HelpButton, BatchButton, Citation, TitleWidget, RunBox, WarningBox
@@ -54,12 +51,12 @@ class Pool:
         for b0 in B0_DEFAULTS:
             self.vals[b0] = list(self.original_vals[b0])[:]
 
-class NewPoolDialog(QtGui.QDialog):
+class NewPoolDialog(QtWidgets.QDialog):
 
     def __init__(self, parent):
         super(NewPoolDialog, self).__init__(parent)
         self.setWindowTitle("New Pool")
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
 
         self.optbox = OptionBox()
         vbox.addWidget(self.optbox)
@@ -71,7 +68,7 @@ class NewPoolDialog(QtGui.QDialog):
         self.optbox.add("T2 (s)", NumericOption(minval=0, maxval=1.0, default=0.07, decimals=6, slider=False), key="t2")
         self.optbox.option("name").sig_changed.connect(self._validate)
 
-        self.button_box = QtGui.QDialogButtonBox(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel)
+        self.button_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         vbox.addWidget(self.button_box)
@@ -93,9 +90,9 @@ class NewPoolDialog(QtGui.QDialog):
             self.optbox.option("name").setStyleSheet("QLineEdit {background-color: red}")
             valid = False
         
-        self.button_box.button(QtGui.QDialogButtonBox.Ok).setEnabled(valid)
+        self.button_box.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(valid)
 
-class SequenceOptions(QtGui.QWidget):
+class SequenceOptions(QtWidgets.QWidget):
     """
     Widget containing options for the CEST sequence
     """
@@ -103,10 +100,10 @@ class SequenceOptions(QtGui.QWidget):
     sig_b0_changed = QtCore.Signal(float)
 
     def __init__(self, ivm=None):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self._ivm = ivm
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         self.setLayout(vbox)
 
         self.optbox = OptionBox()
@@ -133,11 +130,11 @@ class SequenceOptions(QtGui.QWidget):
         vbox.addWidget(self.warn_box)
 
         # B1 field
-        #hbox = QtGui.QHBoxLayout()
-        #self.unsat_cb = QtGui.QCheckBox("Unsaturated")
+        #hbox = QtWidgets.QHBoxLayout()
+        #self.unsat_cb = QtWidgets.QCheckBox("Unsaturated")
         #self.unsat_cb.stateChanged.connect(self.update_ui)
         #hbox.addWidget(self.unsat_cb)
-        #self.unsat_combo = QtGui.QComboBox()
+        #self.unsat_combo = QtWidgets.QComboBox()
         #self.unsat_combo.addItem("first")
         #self.unsat_combo.addItem("last")
         #self.unsat_combo.addItem("first and last  ")
@@ -206,7 +203,7 @@ class SequenceOptions(QtGui.QWidget):
         options.pop("b0_custom", None)
         return options
 
-class PoolOptions(QtGui.QWidget):
+class PoolOptions(QtWidgets.QWidget):
     """
     Widget which allows the set of pools included in the analysis to be changed
     """
@@ -214,7 +211,7 @@ class PoolOptions(QtGui.QWidget):
     sig_pools_changed = QtCore.Signal(object)
 
     def __init__(self, ivm=None):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self._ivm = ivm
         self._poolvals_edited = False
         self._updating = False
@@ -227,23 +224,23 @@ class PoolOptions(QtGui.QWidget):
             Pool("MT", False, {"3.0T" : [0, 60, 1.0, 0.0001], "9.4T" : [0, 60, 1.5, 0.0001]}),
         ]
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         self.setLayout(vbox)
 
         self.pools_table = QtGui.QStandardItemModel()
         self.pools_table.itemChanged.connect(self._pools_table_changed)
-        self.pools_table_view = QtGui.QTableView()
+        self.pools_table_view = QtWidgets.QTableView()
         self.pools_table_view.setModel(self.pools_table)
         vbox.addWidget(self.pools_table_view)
 
-        hbox = QtGui.QHBoxLayout()
-        new_btn = QtGui.QPushButton("New")
+        hbox = QtWidgets.QHBoxLayout()
+        new_btn = QtWidgets.QPushButton("New")
         new_btn.clicked.connect(self._new_pool)
         hbox.addWidget(new_btn)
-        reset_btn = QtGui.QPushButton("Reset")
+        reset_btn = QtWidgets.QPushButton("Reset")
         reset_btn.clicked.connect(self._reset_pools)
         hbox.addWidget(reset_btn)
-        self.custom_label = QtGui.QLabel("")
+        self.custom_label = QtWidgets.QLabel("")
         self.custom_label.setStyleSheet("QLabel { color : red; }")
         hbox.addWidget(self.custom_label, stretch=1)
         vbox.addLayout(hbox)
@@ -269,7 +266,7 @@ class PoolOptions(QtGui.QWidget):
             self.pools_table.setHorizontalHeaderItem(2, QtGui.QStandardItem("Exchange rate"))
             self.pools_table.setHorizontalHeaderItem(3, QtGui.QStandardItem("T1"))
             self.pools_table.setHorizontalHeaderItem(4, QtGui.QStandardItem("T2"))
-            self.pools_table_view.horizontalHeader().setSectionResizeMode(0, QtGui.QHeaderView.Stretch)
+            self.pools_table_view.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
             for idx, pool in enumerate(self._pools):
                 name_item = QtGui.QStandardItem(pool.name)
@@ -357,17 +354,17 @@ class PoolOptions(QtGui.QWidget):
         options["output-rename"] = renames
         return options
 
-class AnalysisOptions(QtGui.QWidget):
+class AnalysisOptions(QtWidgets.QWidget):
     """
     Widget allowing model and output options to be changed
     """
     
     def __init__(self, ivm=None):
-        QtGui.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self)
         self._ivm = ivm
         self._poolvals_edited = False
 
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         self.setLayout(vbox)
 
         self.optbox = OptionBox()
@@ -447,7 +444,7 @@ class CESTWidget(QpWidget):
         QpWidget.__init__(self, name="QuantiCEST", icon="cest", group="CEST", desc="Bayesian CEST analysis", **kwargs)
         
     def init_ui(self):
-        vbox = QtGui.QVBoxLayout()
+        vbox = QtWidgets.QVBoxLayout()
         self.setLayout(vbox)
 
         try:
@@ -456,7 +453,7 @@ class CESTWidget(QpWidget):
             self.fabber_process = None
 
         if self.fabber_process is None:
-            vbox.addWidget(QtGui.QLabel("Fabber core library not found.\n\n You must install Fabber to use this widget"))
+            vbox.addWidget(QtWidgets.QLabel("Fabber core library not found.\n\n You must install Fabber to use this widget"))
             return
     
         title = TitleWidget(self, help="cest", subtitle="Bayesian Modelling for Chemical Exchange Saturation Transfer MRI %s" % __version__)
@@ -465,7 +462,7 @@ class CESTWidget(QpWidget):
         cite = Citation(CEST_CITE_TITLE, CEST_CITE_AUTHOR, CEST_CITE_JOURNAL)
         vbox.addWidget(cite)
 
-        self.tabs = QtGui.QTabWidget()
+        self.tabs = QtWidgets.QTabWidget()
         self.seqtab = SequenceOptions(self.ivm)
         self.tabs.addTab(self.seqtab, "Sequence")
 
@@ -479,7 +476,7 @@ class CESTWidget(QpWidget):
         self.seqtab.sig_b0_changed.connect(self.pooltab.set_b0)
         vbox.addWidget(self.tabs)
 
-        run_tabs = QtGui.QTabWidget()
+        run_tabs = QtWidgets.QTabWidget()
         run_box = RunBox(self._get_process_model, self._options, title="Run model-based analysis", save_option=True)
         run_tabs.addTab(run_box, "Model based analysis")
         run_box = RunBox(self._get_process_lda, self._options_lda, title="Run Lorentzian Difference analysis", save_option=True)
